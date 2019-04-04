@@ -28,11 +28,11 @@ namespace AccountingEventsProcessingFunction
             databaseName: Constants.DatabaseName,
             collectionName: Constants.EventStoreCollectionName,
             ConnectionStringSetting = "CosmosDbConnection",
-            LeaseCollectionName = "leases", CreateLeaseCollectionIfNotExists = true)]IReadOnlyList<Document> input, 
+            LeaseCollectionName = "leases", CreateLeaseCollectionIfNotExists = true)]IReadOnlyList<Document> events, 
             [CosmosDB(Constants.DatabaseName, Constants.ViewsCollectionName, ConnectionStringSetting = "CosmosDbConnection", Id = "Id")]IAsyncCollector<Aggregate> views,
             ILogger log)
         {
-            foreach(var e in input)
+            foreach(var e in events)
             {
                 var eventType = e.GetPropertyValue<string>(nameof(DomainEvent.Type));
                 Account account = null;
