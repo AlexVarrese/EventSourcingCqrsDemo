@@ -41,7 +41,7 @@ namespace AccountingApi.Controllers
         [HttpPost("{accountNumber}/close")]
         public async Task Close(string accountNumber)
         {
-            await this.AccountCommands.CloseAccountAsync(new Accounting.Services.Commands.CloseAccoundCommand(accountNumber));
+            await this.AccountCommands.CloseAccountAsync(new CloseAccoundCommand(accountNumber));
         }
     }
 }
