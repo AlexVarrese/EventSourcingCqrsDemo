@@ -1,6 +1,8 @@
+using Accounting.EventsProcessingFunction;
 using AccountingApi;
 using AccountingApi.Domain;
 using AccountingApi.Services;
+using MediatR;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -13,11 +15,11 @@ namespace AccountingEventsProcessingFunction
 {
     public class EventsProcessingFunction
     {
-        public IAccountQuerys AccountQuerys { get; }
+        public IMediator Mediator { get; }
 
-        public EventsProcessingFunction(IAccountQuerys accountQuerys)
+        public EventsProcessingFunction(IAccountQuerys accountQuerys, IMediator mediator)
         {
-            this.AccountQuerys = accountQuerys ?? throw new ArgumentNullException(nameof(accountQuerys));
+            this.Mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
                
 
@@ -34,37 +36,33 @@ namespace AccountingEventsProcessingFunction
             {
                 var eventType = e.GetPropertyValue<string>(nameof(DomainEvent.Type));
                 Account account = null;
-
+                
                 switch(eventType)
                 {
                     case nameof(AccountCreated):
                         {
                             var accountCreatedEvent = JsonConvert.DeserializeObject<AccountCreated>(e.ToString());
-                            account = new Account(accountCreatedEvent.AccountNumber, accountCreatedEvent.Owner);
+                            account = await Mediator.Send(new AccountEventRequest<AccountCreated>(accountCreatedEvent));
                             break;
                         }
                     case nameof(AccountClosed):
                         {
                             var accountClosedEvent = JsonConvert.DeserializeObject<AccountClosed>(e.ToString());
-                            account = await this.AccountQuerys.GetAccountByNumberAsync(accountClosedEvent.AccountNumber);
-                            account.AccountState = AccountState.Closed;
-                            account.SequenceNumber = accountClosedEvent.SequenceNumber;
+                            account = await Mediator.Send(new AccountEventRequest<AccountClosed>(accountClosedEvent));
                             break;
                         }
                     case nameof(BalanceIncreased):
                         {
                             var balanceIncreasedEvent = JsonConvert.DeserializeObject<BalanceIncreased>(e.ToString());
-                            account = await this.AccountQuerys.GetAccountByNumberAsync(balanceIncreasedEvent.AccountNumber);
-                            account.CurrentBalance += balanceIncreasedEvent.Amount;
-                            account.SequenceNumber = balanceIncreasedEvent.SequenceNumber;
+                            account = await Mediator.Send(new AccountEventRequest<BalanceIncreased>(balanceIncreasedEvent));
+
                             break;
                         }
                     case nameof(BalanceDecreased):
                         {
                             var balanceDecreasedEvent = JsonConvert.DeserializeObject<BalanceDecreased>(e.ToString());
-                            account = await this.AccountQuerys.GetAccountByNumberAsync(balanceDecreasedEvent.AccountNumber);
-                            account.CurrentBalance -= balanceDecreasedEvent.Amount;
-                            account.SequenceNumber = balanceDecreasedEvent.SequenceNumber;
+                            account = await Mediator.Send(new AccountEventRequest<BalanceDecreased>(balanceDecreasedEvent));
+
                             break;
                         }
                 }

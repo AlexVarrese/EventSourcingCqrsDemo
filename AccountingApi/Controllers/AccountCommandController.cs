@@ -17,8 +17,7 @@ namespace AccountingApi.Controllers
         public AccountCommandController(IAccountCommands commands)
         {
             AccountCommands = commands ?? throw new ArgumentNullException(nameof(commands));
-        }                        
-        
+        }
         
         [HttpPost("create")]
         public async Task Create([FromBody] CreateAccountCommand command)

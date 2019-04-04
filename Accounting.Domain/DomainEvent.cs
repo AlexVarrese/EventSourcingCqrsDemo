@@ -17,10 +17,10 @@ namespace AccountingApi.Domain
         public long SequenceNumber { get; set; }
         public string Type { get; set; }
 
-        public DomainEvent(string aggregateId, long sequenceNumber, string eventType)
+        public DomainEvent(string aggregateId, long sequenceNumber)
         {
             this.Id = $"{aggregateId}|{sequenceNumber}";
-            this.Type = eventType ?? throw new ArgumentNullException(nameof(eventType));
+            this.Type = this.GetType().Name;
             this.AggregateId = aggregateId ?? throw new ArgumentNullException(nameof(aggregateId));
             this.SequenceNumber = sequenceNumber;
         }
