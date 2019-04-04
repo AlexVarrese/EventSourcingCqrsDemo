@@ -20,8 +20,7 @@ namespace Accounting.EventsProcessingFunction
             builder.Services.AddScoped<DocumentClient>(_ => 
                 CreateDocumentClientFromConnectionString(cosmosDbConnectionString));
             builder.Services.AddScoped<IAccountQuerys, AccountQuerys>();
-            builder.Services.AddSingleton<AccountingEventHandlers>();
-            builder.Services.AddMediatR();
+            builder.Services.AddSingleton<IAccountingEventHandlers, AccountingEventHandlers>();
         }
 
         /// <summary>

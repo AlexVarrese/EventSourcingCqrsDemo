@@ -9,7 +9,6 @@
     <None Remove="EventHandlers\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MediatR" Version="6.0.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="6.0.1" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.CosmosDB" Version="3.0.3" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.26" />
