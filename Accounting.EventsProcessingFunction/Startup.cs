@@ -17,10 +17,10 @@ namespace Accounting.EventsProcessingFunction
         public void Configure(IWebJobsBuilder builder)
         {
             var cosmosDbConnectionString = Environment.GetEnvironmentVariable("CosmosDbConnection", EnvironmentVariableTarget.Process);
-            builder.Services.AddScoped<DocumentClient>(_ => 
+            builder.Services.AddSingleton<DocumentClient>(_ => 
                 CreateDocumentClientFromConnectionString(cosmosDbConnectionString));
             builder.Services.AddScoped<IAccountQuerys, AccountQuerys>();
-            builder.Services.AddSingleton<IAccountingEventHandlers, AccountingEventHandlers>();
+            builder.Services.AddScoped<IAccountingEventHandlers, AccountingEventHandlers>();
         }
 
         /// <summary>

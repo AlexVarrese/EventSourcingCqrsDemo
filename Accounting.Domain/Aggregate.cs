@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace AccountingApi.Domain
 {
+    /// <summary>
+    /// Reflects a projection of related domain events.
+    /// </summary>
     public abstract class Aggregate
     {
         /// <summary>

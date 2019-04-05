@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Accounting.Domain\Accounting.Domain.csproj" />
-    <ProjectReference Include="..\Accounting.Services\Accounting.Services.csproj" />
     <ProjectReference Include="..\Accounting.Shared\Accounting.Shared.csproj" />
   </ItemGroup>
 
