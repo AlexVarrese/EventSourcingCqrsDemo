@@ -45,34 +45,32 @@ namespace Accounting.Services
             return account;
         }
 
-        public async Task<Account> Handle(string type, string e)
+        public async Task<Account> Handle(string type, string eventJson)
         {
             Account account = null;
 
-            switch (type)
+            var eventObject = JsonConvert.DeserializeObject(eventJson.ToString(), Type.GetType(type));
+
+            switch (eventObject)
             {
-                case nameof(AccountCreated):
+                case AccountCreated accountCreatedEvent:
                     {
-                        var accountCreatedEvent = JsonConvert.DeserializeObject<AccountCreated>(e.ToString());
                         account = await Handle(accountCreatedEvent);
                         break;
                     }
-                case nameof(AccountClosed):
+                case AccountClosed accountClosedEvent:
                     {
-                        var accountClosedEvent = JsonConvert.DeserializeObject<AccountClosed>(e.ToString());
                         account = await Handle(accountClosedEvent);
                         break;
                     }
-                case nameof(BalanceIncreased):
+                case BalanceIncreased balanceIncreasedEvent:
                     {
-                        var balanceIncreasedEvent = JsonConvert.DeserializeObject<BalanceIncreased>(e.ToString());
                         account = await Handle(balanceIncreasedEvent);
 
                         break;
                     }
-                case nameof(BalanceDecreased):
+                case BalanceDecreased balanceDecreasedEvent:
                     {
-                        var balanceDecreasedEvent = JsonConvert.DeserializeObject<BalanceDecreased>(e.ToString());
                         account = await Handle(balanceDecreasedEvent);
 
                         break;
