@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using AccountingApi.Domain;
 
-namespace Accounting.EventsProcessingFunction
+namespace Accounting.Services
 {
     public interface IAccountingEventHandlers
     {

@@ -1,4 +1,5 @@
 using Accounting.EventsProcessingFunction;
+using Accounting.Services;
 using AccountingApi;
 using AccountingApi.Domain;
 using Microsoft.Azure.Documents;

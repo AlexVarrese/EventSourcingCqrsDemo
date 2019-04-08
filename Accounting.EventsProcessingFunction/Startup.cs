@@ -1,4 +1,5 @@
 ﻿using Accounting.EventsProcessingFunction;
+using Accounting.Services;
 using AccountingApi.Services;
 using MediatR;
 using Microsoft.Azure.Documents.Client;

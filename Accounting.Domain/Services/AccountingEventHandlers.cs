@@ -1,12 +1,10 @@
 ﻿using AccountingApi.Domain;
 using AccountingApi.Services;
-using MediatR;
 using Newtonsoft.Json;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace Accounting.EventsProcessingFunction
+namespace Accounting.Services
 {
     public class AccountingEventHandlers : IAccountingEventHandlers
     {
