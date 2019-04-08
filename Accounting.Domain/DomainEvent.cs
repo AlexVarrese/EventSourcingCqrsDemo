@@ -20,7 +20,7 @@ namespace AccountingApi.Domain
         public DomainEvent(string aggregateId, long sequenceNumber)
         {
             this.Id = $"{aggregateId}|{sequenceNumber}";
-            this.Type = this.GetType().Name;
+            this.Type = this.GetType().FullName;
             this.AggregateId = aggregateId ?? throw new ArgumentNullException(nameof(aggregateId));
             this.SequenceNumber = sequenceNumber;
         }

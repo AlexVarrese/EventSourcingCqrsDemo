@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Accounting.Domain.Services;
 using AccountingApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -58,6 +59,7 @@ namespace AccountingApi
             services.AddSingleton(documentClient);
             services.AddScoped<IAccountQuerys, AccountQuerys>();
             services.AddScoped<IAccountCommands, AccountCommands>();
+            services.AddScoped<IEventStore, EventStore>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

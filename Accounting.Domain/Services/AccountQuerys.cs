@@ -19,7 +19,7 @@ namespace AccountingApi.Services
 
         public bool IsAccountExisting(string accountNumber)
         {
-            string accountDocumentId = Account.CreateAccountId(accountNumber);
+            string accountDocumentId = Account.CreateAggregateId(accountNumber);
 
             var accountCount = this.DocumentClient.CreateDocumentQuery<Account>(
                 UriFactory.CreateDocumentCollectionUri(Constants.DatabaseName, Constants.ViewsCollectionName),
@@ -31,7 +31,7 @@ namespace AccountingApi.Services
 
         public async Task<Account> GetAccountByNumberAsync(string accountNumber)
         {
-            string accountDocumentId = Account.CreateAccountId(accountNumber);
+            string accountDocumentId = Account.CreateAggregateId(accountNumber);
 
             var account = await this.DocumentClient.ReadDocumentAsync<Account>(
                 UriFactory.CreateDocumentUri(Constants.DatabaseName, Constants.ViewsCollectionName, accountDocumentId), 

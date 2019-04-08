@@ -1,4 +1,5 @@
-﻿using Accounting.Services.Commands;
+﻿using Accounting.Domain.Services;
+using Accounting.Services.Commands;
 using AccountingApi.Domain;
 using Microsoft.Azure.Documents.Client;
 using System;
@@ -10,13 +11,14 @@ namespace AccountingApi.Services
 {
     public class AccountCommands : IAccountCommands
     {
-        private DocumentClient DocumentClient { get; }
-        private IAccountQuerys AccountQuerys { get; }
+        public IAccountQuerys AccountQuerys { get; }
+        public IEventStore EventStore { get; }
 
-        public AccountCommands(DocumentClient documentClient, IAccountQuerys accountQuerys)
+        public AccountCommands(IAccountQuerys accountQuerys, IEventStore eventStore)
+
         {
-            this.DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
             this.AccountQuerys = accountQuerys ?? throw new ArgumentNullException(nameof(accountQuerys));
+            this.EventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
         }
 
         public async Task CloseAccountAsync(CloseAccoundCommand command)
@@ -27,7 +29,7 @@ namespace AccountingApi.Services
                 throw new InvalidOperationException($"Account {command.AccountNumber} is already closed.");
             }
 
-            await DispatchEvents(new AccountClosed(command.AccountNumber, ++account.SequenceNumber));
+            await this.EventStore.AddEventsAsync(new AccountClosed(command.AccountNumber, ++account.SequenceNumber));
         }
 
         public async Task CreateAccountAsync(CreateAccountCommand command)
@@ -37,7 +39,7 @@ namespace AccountingApi.Services
                 throw new InvalidOperationException($"Account {command.AccountNumber} already exists.");
             }
 
-            await DispatchEvents(new AccountCreated(command.AccountNumber, command.Owner));
+            await this.EventStore.AddEventsAsync(new AccountCreated(command.AccountNumber, command.Owner));
         }
 
         public async Task MakeDepositAsync(MakeDepositCommand command)
@@ -48,7 +50,7 @@ namespace AccountingApi.Services
                 throw new InvalidOperationException($"Account {command.AccountNumber} is closed.");
             }
 
-            await DispatchEvents(new BalanceIncreased(account.AccountNumber, ++account.SequenceNumber, command.Amount));
+            await this.EventStore.AddEventsAsync(new BalanceIncreased(account.AccountNumber, ++account.SequenceNumber, command.Amount));
         }
 
         public async Task TransferMoneyAsync(TransferMoneyCommand command)
@@ -68,18 +70,12 @@ namespace AccountingApi.Services
                 throw new InvalidOperationException($"Account {command.DestinationAccountNumber} is closed.");
             }
 
-            await DispatchEvents(
+            await this.EventStore.AddEventsAsync(
                 new BalanceDecreased(sourceAccount.AccountNumber, ++sourceAccount.SequenceNumber, command.Amount),
                 new BalanceIncreased(destinationAccount.AccountNumber, ++destinationAccount.SequenceNumber, command.Amount));
         }
 
-        private async Task DispatchEvents(params DomainEvent[] domainEvents)
-        {
-            foreach (var e in domainEvents)
-            {
-                await DocumentClient.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(Constants.DatabaseName, Constants.EventStoreCollectionName), e);
-            }
-        }
+        
 
     }
 }

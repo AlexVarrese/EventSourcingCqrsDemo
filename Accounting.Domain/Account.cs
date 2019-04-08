@@ -15,15 +15,15 @@ namespace AccountingApi.Domain
         public AccountState AccountState { get; set; }
         public string Owner { get; }
 
-        public static string CreateAccountId(string accountNumber)
+        public static string CreateAggregateId(string accountNumber)
         {
             return $"{nameof(Account)}|{accountNumber}";
         }
 
         public Account(string accountNumber, string owner, long sequenceNumber = 0) 
-            : base(CreateAccountId(accountNumber), sequenceNumber)
+            : base(CreateAggregateId(accountNumber), sequenceNumber)
         {
-            this.Id = CreateAccountId(accountNumber);
+            this.Id = CreateAggregateId(accountNumber);
             this.AccountNumber = accountNumber;
             this.Owner = owner;
             this.AccountState = AccountState.Created;
