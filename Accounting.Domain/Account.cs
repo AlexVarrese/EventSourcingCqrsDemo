@@ -22,12 +22,12 @@ namespace AccountingApi.Domain
         {
         }
 
-        public Account(IEnumerable<DomainEvent> domainEvents)
+        public Account(IEnumerable<AggregateEvent> domainEvents)
         {
             this.ApplyEvents(domainEvents);
         }
 
-        public Account ApplyEvents(IEnumerable<DomainEvent> domainEvents)
+        public Account ApplyEvents(IEnumerable<AggregateEvent> domainEvents)
         {
             Account account = null;
             foreach (var eventObject in domainEvents)

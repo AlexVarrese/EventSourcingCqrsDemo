@@ -3,7 +3,7 @@ using System;
 
 namespace AccountingApi.Domain
 {
-    public class BalanceIncreased : DomainEvent
+    public class BalanceIncreased : AggregateEvent
     {
         public string AccountNumber { get; }
         public double Amount { get; }

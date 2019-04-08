@@ -19,7 +19,7 @@ namespace AccountingApi.Infrastructure
             this.DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
         }
 
-        public async Task AddEventsAsync(params DomainEvent[] domainEvents)
+        public async Task AddEventsAsync(params AggregateEvent[] domainEvents)
         {
             foreach (var e in domainEvents)
             {
@@ -27,12 +27,12 @@ namespace AccountingApi.Infrastructure
             }
         }
 
-        public IEnumerable<DomainEvent> GetDomainEvents(string aggregateId)
+        public IEnumerable<AggregateEvent> GetDomainEvents(string aggregateId)
         {
             var query = DocumentClient.CreateDocumentQuery(GetEventStoreUri(), new FeedOptions() { PartitionKey = new Microsoft.Azure.Documents.PartitionKey(aggregateId) });
             
             return query.ToList().Select(d =>
-                (DomainEvent)JsonConvert.DeserializeObject(d.ToString(), Type.GetType(d.GetPropertyValue<string>(nameof(DomainEvent.Type))))
+                (AggregateEvent)JsonConvert.DeserializeObject(d.ToString(), Type.GetType(d.GetPropertyValue<string>(nameof(AggregateEvent.Type))))
             ).OrderBy(d=>d.SequenceNumber).ToList();
         }
 

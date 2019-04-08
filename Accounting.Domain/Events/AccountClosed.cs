@@ -3,7 +3,7 @@ using System;
 
 namespace AccountingApi.Domain
 {
-    public class AccountClosed : DomainEvent
+    public class AccountClosed : AggregateEvent
     {
         public string AccountNumber { get; }
 

@@ -34,7 +34,7 @@ namespace AccountingEventsProcessingFunction
         {
             foreach(var e in events)
             {
-                var aggregateId = e.GetPropertyValue<string>(nameof(DomainEvent.AggregateId));
+                var aggregateId = e.GetPropertyValue<string>(nameof(AggregateEvent.AggregateId));
 
                 var domainEvents = this.EventStore.GetDomainEvents(aggregateId);
                 var account = new Account(domainEvents);

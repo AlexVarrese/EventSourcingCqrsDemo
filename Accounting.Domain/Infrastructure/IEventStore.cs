@@ -6,7 +6,7 @@ namespace AccountingApi.Infrastructure
 {
     public interface IEventStore
     {
-        Task AddEventsAsync(params DomainEvent[] domainEvents);
-        IEnumerable<DomainEvent> GetDomainEvents(string aggregateId);
+        Task AddEventsAsync(params AggregateEvent[] domainEvents);
+        IEnumerable<AggregateEvent> GetDomainEvents(string aggregateId);
     }
 }
