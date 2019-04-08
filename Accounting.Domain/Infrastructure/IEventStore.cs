@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using AccountingApi.Domain;
 
-namespace Accounting.Domain.Services
+namespace AccountingApi.Infrastructure
 {
     public interface IEventStore
     {

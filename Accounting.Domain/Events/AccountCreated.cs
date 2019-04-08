@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AccountingApi.Infrastructure;
+using System;
 
 namespace AccountingApi.Domain
 {

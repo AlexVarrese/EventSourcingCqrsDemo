@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Accounting.Domain.Services
+namespace AccountingApi.Infrastructure
 {
     public class EventStore : IEventStore
     {

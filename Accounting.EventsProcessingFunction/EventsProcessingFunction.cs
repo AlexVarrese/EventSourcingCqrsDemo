@@ -2,6 +2,7 @@ using Accounting.EventsProcessingFunction;
 using Accounting.Services;
 using AccountingApi;
 using AccountingApi.Domain;
+using AccountingApi.Infrastructure;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;

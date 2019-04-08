@@ -1,10 +1,7 @@
-﻿using Accounting.Domain.Services;
-using Accounting.Services.Commands;
+﻿using Accounting.Services.Commands;
 using AccountingApi.Domain;
-using Microsoft.Azure.Documents.Client;
+using AccountingApi.Infrastructure;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace AccountingApi.Services
