@@ -10,14 +10,13 @@ namespace AccountingApi.Infrastructure
         /// <summary>
         /// It is important to partition your event store by this key, as this will guarantee that events will get processed in sync.
         /// </summary>
-        public string AggregateId { get; }
+        public string AggregateId { get; set; }
 
         public long SequenceNumber { get; set; }
 
-        public Aggregate(string id, long sequenceNumber)
+        public Aggregate()
         {
-            this.AggregateId = id ?? throw new ArgumentNullException(nameof(id));
-            this.SequenceNumber = sequenceNumber;
+
         }
     }
 }

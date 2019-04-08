@@ -1,5 +1,6 @@
 ﻿using Accounting.EventsProcessingFunction;
 using Accounting.Services;
+using AccountingApi.Infrastructure;
 using AccountingApi.Services;
 using MediatR;
 using Microsoft.Azure.Documents.Client;
@@ -20,8 +21,7 @@ namespace Accounting.EventsProcessingFunction
             var cosmosDbConnectionString = Environment.GetEnvironmentVariable("CosmosDbConnection", EnvironmentVariableTarget.Process);
             builder.Services.AddSingleton<DocumentClient>(_ => 
                 CreateDocumentClientFromConnectionString(cosmosDbConnectionString));
-            builder.Services.AddScoped<IAccountQuerys, AccountQuerys>();
-            builder.Services.AddScoped<IAccountingEventHandlers, AccountingEventHandlers>();
+            builder.Services.AddScoped<IEventStore, EventStore>();
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
-﻿using Accounting.Domain;
-using Accounting.Services.Commands;
+﻿using Accounting.Services.Commands;
 using AccountingApi.Domain;
 using AccountingApi.Infrastructure;
 using System;
@@ -76,8 +75,8 @@ namespace AccountingApi.Services
         private Account BuildAccountFromDomainEvents(string accountNumber)
         {
             var domainEvents = this.EventStore.GetDomainEvents(Account.CreateAggregateId(accountNumber));
-            var aggregateRoot = new AccountAggregateRoot(domainEvents);
-            return aggregateRoot.Aggregate;
+            var account = new Account(domainEvents);
+            return account;
         }
     }
 }

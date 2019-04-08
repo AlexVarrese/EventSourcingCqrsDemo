@@ -33,7 +33,7 @@ namespace AccountingApi.Infrastructure
             
             return query.ToList().Select(d =>
                 (DomainEvent)JsonConvert.DeserializeObject(d.ToString(), Type.GetType(d.GetPropertyValue<string>(nameof(DomainEvent.Type))))
-            ).ToList();
+            ).OrderBy(d=>d.SequenceNumber).ToList();
         }
 
         private Uri GetEventStoreUri()

@@ -15,11 +15,11 @@ namespace AccountingEventsProcessingFunction
 {
     public class EventsProcessingFunction
     {
-        public IAccountingEventHandlers EventHandler { get; }
+        public IEventStore EventStore { get; }
 
-        public EventsProcessingFunction(IAccountingEventHandlers eventHandler)
+        public EventsProcessingFunction(IEventStore eventStore)
         {
-            this.EventHandler = eventHandler ?? throw new ArgumentNullException(nameof(eventHandler));
+            this.EventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
         }
                
 
@@ -34,8 +34,10 @@ namespace AccountingEventsProcessingFunction
         {
             foreach(var e in events)
             {
-                var eventType = e.GetPropertyValue<string>(nameof(DomainEvent.Type));
-                Account account = await EventHandler.Handle(eventType, e.ToString());
+                var aggregateId = e.GetPropertyValue<string>(nameof(DomainEvent.AggregateId));
+
+                var domainEvents = this.EventStore.GetDomainEvents(aggregateId);
+                var account = new Account(domainEvents);
 
                 await views.AddAsync(account);
             }
