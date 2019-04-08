@@ -1,4 +1,5 @@
-﻿using AccountingApi.Domain;
+﻿using Accounting.Domain;
+using AccountingApi.Domain;
 using AccountingApi.Services;
 using Newtonsoft.Json;
 using System;
@@ -15,36 +16,6 @@ namespace Accounting.Services
             AccountQuerys = accountQuerys ?? throw new ArgumentNullException(nameof(accountQuerys));
         }
 
-        public Task<Account> Handle(AccountCreated request)
-        {
-            var account = new Account(request.AccountNumber, request.Owner);
-            return Task.FromResult(account);
-        }
-
-        public async Task<Account> Handle(AccountClosed request)
-        {
-            var account = await this.AccountQuerys.GetAccountByNumberAsync(request.AccountNumber);
-            account.AccountState = AccountState.Closed;
-            account.SequenceNumber = request.SequenceNumber;
-            return account;
-        }
-
-        public async Task<Account> Handle(BalanceIncreased request)
-        {
-            var account = await this.AccountQuerys.GetAccountByNumberAsync(request.AccountNumber);
-            account.CurrentBalance += request.Amount;
-            account.SequenceNumber = request.SequenceNumber;
-            return account;
-        }
-
-        public async Task<Account> Handle(BalanceDecreased request)
-        {
-            var account = await this.AccountQuerys.GetAccountByNumberAsync(request.AccountNumber);
-            account.CurrentBalance -= request.Amount;
-            account.SequenceNumber = request.SequenceNumber;
-            return account;
-        }
-
         public async Task<Account> Handle(string type, string eventJson)
         {
             Account account = null;
@@ -55,23 +26,26 @@ namespace Accounting.Services
             {
                 case AccountCreated accountCreatedEvent:
                     {
-                        account = await Handle(accountCreatedEvent);
+                        account = new AccountAggregateRoot().Handle(accountCreatedEvent);
                         break;
                     }
                 case AccountClosed accountClosedEvent:
                     {
-                        account = await Handle(accountClosedEvent);
+                        account = await this.AccountQuerys.GetAccountByNumberAsync(accountClosedEvent.AccountNumber);
+                        account = new AccountAggregateRoot().Handle(account, accountClosedEvent);
                         break;
                     }
                 case BalanceIncreased balanceIncreasedEvent:
                     {
-                        account = await Handle(balanceIncreasedEvent);
+                        account = await this.AccountQuerys.GetAccountByNumberAsync(balanceIncreasedEvent.AccountNumber);
+                        account = new AccountAggregateRoot().Handle(account, balanceIncreasedEvent);
 
                         break;
                     }
                 case BalanceDecreased balanceDecreasedEvent:
                     {
-                        account = await Handle(balanceDecreasedEvent);
+                        account = await this.AccountQuerys.GetAccountByNumberAsync(balanceDecreasedEvent.AccountNumber);
+                        account = new AccountAggregateRoot().Handle(account, balanceDecreasedEvent);
 
                         break;
                     }

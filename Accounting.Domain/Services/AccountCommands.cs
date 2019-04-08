@@ -1,4 +1,5 @@
-﻿using Accounting.Services.Commands;
+﻿using Accounting.Domain;
+using Accounting.Services.Commands;
 using AccountingApi.Domain;
 using AccountingApi.Infrastructure;
 using System;
@@ -20,7 +21,7 @@ namespace AccountingApi.Services
 
         public async Task CloseAccountAsync(CloseAccoundCommand command)
         {
-            var account = await AccountQuerys.GetAccountByNumberAsync(command.AccountNumber);
+            var account = BuildAccountFromDomainEvents(command.AccountNumber);
             if (account.AccountState == AccountState.Closed)
             {
                 throw new InvalidOperationException($"Account {command.AccountNumber} is already closed.");
@@ -41,7 +42,7 @@ namespace AccountingApi.Services
 
         public async Task MakeDepositAsync(MakeDepositCommand command)
         {
-            var account = await AccountQuerys.GetAccountByNumberAsync(command.AccountNumber);
+            var account =  BuildAccountFromDomainEvents(command.AccountNumber);
             if(account.AccountState == AccountState.Closed)
             {
                 throw new InvalidOperationException($"Account {command.AccountNumber} is closed.");
@@ -52,7 +53,7 @@ namespace AccountingApi.Services
 
         public async Task TransferMoneyAsync(TransferMoneyCommand command)
         {
-            var sourceAccount = await AccountQuerys.GetAccountByNumberAsync(command.SourceAccountNumber);
+            var sourceAccount = BuildAccountFromDomainEvents(command.SourceAccountNumber);
             if (sourceAccount.AccountState == AccountState.Closed)
             {
                 throw new InvalidOperationException($"Account {command.SourceAccountNumber} is closed.");
@@ -61,7 +62,7 @@ namespace AccountingApi.Services
             {
                 throw new InvalidOperationException($"Account {command.SourceAccountNumber} does not have enough balance to execute the transaction.");
             }
-            var destinationAccount = await AccountQuerys.GetAccountByNumberAsync(command.DestinationAccountNumber);
+            var destinationAccount = BuildAccountFromDomainEvents(command.DestinationAccountNumber);
             if (destinationAccount.AccountState == AccountState.Closed)
             {
                 throw new InvalidOperationException($"Account {command.DestinationAccountNumber} is closed.");
@@ -72,7 +73,11 @@ namespace AccountingApi.Services
                 new BalanceIncreased(destinationAccount.AccountNumber, ++destinationAccount.SequenceNumber, command.Amount));
         }
 
-        
-
+        private Account BuildAccountFromDomainEvents(string accountNumber)
+        {
+            var domainEvents = this.EventStore.GetDomainEvents(Account.CreateAggregateId(accountNumber));
+            var aggregateRoot = new AccountAggregateRoot(domainEvents);
+            return aggregateRoot.Aggregate;
+        }
     }
 }
