@@ -1,5 +1,6 @@
 ﻿using AccountingApi.Infrastructure;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace AccountingApi.Domain
@@ -73,18 +74,36 @@ namespace AccountingApi.Domain
 
         public void CloseAccount(AccountClosed request)
         {
+            if (this.AccountState == AccountState.Closed)
+            {
+                throw new InvalidOperationException($"Account {AccountNumber} is already closed.");
+            }
+
             this.AccountState = AccountState.Closed;
             this.SequenceNumber = request.SequenceNumber;
         }
 
         public void IncreaseBalance(BalanceIncreased request)
         {
+            if (this.AccountState == AccountState.Closed)
+            {
+                throw new InvalidOperationException($"Account {AccountNumber} is closed.");
+            }
+
             this.CurrentBalance += request.Amount;
             this.SequenceNumber = request.SequenceNumber;
         }
 
         public void DecreaseBalance(BalanceDecreased request)
         {
+            if (this.AccountState == AccountState.Closed)
+            {
+                throw new InvalidOperationException($"Account {AccountNumber} is closed.");
+            }
+            if (this.CurrentBalance < request.Amount)
+            {
+                throw new InvalidOperationException($"Account {AccountNumber} does not have enough balance to execute the transaction.");
+            }
             this.CurrentBalance -= request.Amount;
             this.SequenceNumber = request.SequenceNumber;
         }

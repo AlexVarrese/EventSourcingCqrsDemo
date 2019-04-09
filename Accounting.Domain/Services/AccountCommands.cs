@@ -8,30 +8,24 @@ namespace AccountingApi.Services
 {
     public class AccountCommands : IAccountCommands
     {
-        public IAccountQuerys AccountQuerys { get; }
         public IEventStore EventStore { get; }
 
-        public AccountCommands(IAccountQuerys accountQuerys, IEventStore eventStore)
-
+        public AccountCommands(IEventStore eventStore)
         {
-            this.AccountQuerys = accountQuerys ?? throw new ArgumentNullException(nameof(accountQuerys));
             this.EventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
         }
 
         public async Task CloseAccountAsync(CloseAccoundCommand command)
         {
             var account = BuildAccountFromDomainEvents(command.AccountNumber);
-            if (account.AccountState == AccountState.Closed)
-            {
-                throw new InvalidOperationException($"Account {command.AccountNumber} is already closed.");
-            }
 
             await this.EventStore.AddEventsAsync(new AccountClosed(command.AccountNumber, ++account.SequenceNumber));
         }
 
         public async Task CreateAccountAsync(CreateAccountCommand command)
         {
-            if(AccountQuerys.IsAccountExisting(command.AccountNumber))
+            var account = BuildAccountFromDomainEvents(command.AccountNumber);
+            if (account.AccountState == AccountState.Created)
             {
                 throw new InvalidOperationException($"Account {command.AccountNumber} already exists.");
             }
@@ -42,10 +36,6 @@ namespace AccountingApi.Services
         public async Task MakeDepositAsync(MakeDepositCommand command)
         {
             var account =  BuildAccountFromDomainEvents(command.AccountNumber);
-            if(account.AccountState == AccountState.Closed)
-            {
-                throw new InvalidOperationException($"Account {command.AccountNumber} is closed.");
-            }
 
             await this.EventStore.AddEventsAsync(new BalanceIncreased(account.AccountNumber, ++account.SequenceNumber, command.Amount));
         }
@@ -53,19 +43,7 @@ namespace AccountingApi.Services
         public async Task TransferMoneyAsync(TransferMoneyCommand command)
         {
             var sourceAccount = BuildAccountFromDomainEvents(command.SourceAccountNumber);
-            if (sourceAccount.AccountState == AccountState.Closed)
-            {
-                throw new InvalidOperationException($"Account {command.SourceAccountNumber} is closed.");
-            }
-            if (sourceAccount.CurrentBalance < command.Amount)
-            {
-                throw new InvalidOperationException($"Account {command.SourceAccountNumber} does not have enough balance to execute the transaction.");
-            }
             var destinationAccount = BuildAccountFromDomainEvents(command.DestinationAccountNumber);
-            if (destinationAccount.AccountState == AccountState.Closed)
-            {
-                throw new InvalidOperationException($"Account {command.DestinationAccountNumber} is closed.");
-            }
 
             await this.EventStore.AddEventsAsync(
                 new BalanceDecreased(sourceAccount.AccountNumber, ++sourceAccount.SequenceNumber, command.Amount),
