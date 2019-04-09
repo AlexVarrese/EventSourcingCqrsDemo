@@ -65,6 +65,10 @@ namespace AccountingApi.Domain
 
         public void CreateAccount(AccountCreated request)
         {
+            if (this.AccountState == AccountState.Created)
+            {
+                throw new InvalidOperationException($"Account {AccountNumber} already exists.");
+            }
             this.Id = CreateAggregateId(request.AccountNumber);
             this.AggregateId = CreateAggregateId(request.AccountNumber);
             this.AccountNumber = request.AccountNumber;

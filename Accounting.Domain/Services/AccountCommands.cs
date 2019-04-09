@@ -25,29 +25,34 @@ namespace AccountingApi.Services
         public async Task CreateAccountAsync(CreateAccountCommand command)
         {
             var account = BuildAccountFromDomainEvents(command.AccountNumber);
-            if (account.AccountState == AccountState.Created)
-            {
-                throw new InvalidOperationException($"Account {command.AccountNumber} already exists.");
-            }
 
-            await this.EventStore.AddEventsAsync(new AccountCreated(command.AccountNumber, command.Owner));
+            var aggregateEvent = new AccountCreated(command.AccountNumber, command.Owner);
+            account.CreateAccount(aggregateEvent);
+                        
+            await this.EventStore.AddEventsAsync(aggregateEvent);
         }
 
         public async Task MakeDepositAsync(MakeDepositCommand command)
         {
             var account =  BuildAccountFromDomainEvents(command.AccountNumber);
 
-            await this.EventStore.AddEventsAsync(new BalanceIncreased(account.AccountNumber, ++account.SequenceNumber, command.Amount));
+            var aggregateEvent = new BalanceIncreased(account.AccountNumber, ++account.SequenceNumber, command.Amount);
+            account.IncreaseBalance(aggregateEvent);
+
+            await this.EventStore.AddEventsAsync(aggregateEvent);
         }
 
         public async Task TransferMoneyAsync(TransferMoneyCommand command)
         {
             var sourceAccount = BuildAccountFromDomainEvents(command.SourceAccountNumber);
-            var destinationAccount = BuildAccountFromDomainEvents(command.DestinationAccountNumber);
+            var decreasedEvent = new BalanceDecreased(sourceAccount.AccountNumber, ++sourceAccount.SequenceNumber, command.Amount);
+            sourceAccount.DecreaseBalance(decreasedEvent);
 
-            await this.EventStore.AddEventsAsync(
-                new BalanceDecreased(sourceAccount.AccountNumber, ++sourceAccount.SequenceNumber, command.Amount),
-                new BalanceIncreased(destinationAccount.AccountNumber, ++destinationAccount.SequenceNumber, command.Amount));
+            var destinationAccount = BuildAccountFromDomainEvents(command.DestinationAccountNumber);
+            var increasedEvent = new BalanceIncreased(destinationAccount.AccountNumber, ++destinationAccount.SequenceNumber, command.Amount);
+            destinationAccount.IncreaseBalance(increasedEvent);
+
+            await this.EventStore.AddEventsAsync(decreasedEvent, increasedEvent);
         }
 
         private Account BuildAccountFromDomainEvents(string accountNumber)
