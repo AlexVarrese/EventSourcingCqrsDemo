@@ -19,15 +19,15 @@ namespace AccountingApi.Infrastructure
             this.DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
         }
 
-        public async Task AddEventsAsync(params AggregateEvent[] domainEvents)
+        public async Task AddEventsAsync(IEnumerable<AggregateEvent> aggregateEvents)
         {
-            foreach (var e in domainEvents)
+            foreach (var e in aggregateEvents)
             {
                 await DocumentClient.CreateDocumentAsync(GetEventStoreUri(), e);
             }
         }
 
-        public IEnumerable<AggregateEvent> GetDomainEvents(string aggregateId)
+        public IEnumerable<AggregateEvent> GetAggregateEvents(string aggregateId)
         {
             var query = DocumentClient.CreateDocumentQuery(GetEventStoreUri(), new FeedOptions() { PartitionKey = new Microsoft.Azure.Documents.PartitionKey(aggregateId) });
             

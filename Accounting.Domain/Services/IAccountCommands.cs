@@ -11,6 +11,6 @@ namespace AccountingApi.Services
         Task CreateAccountAsync(CreateAccountCommand command);
         Task MakeDepositAsync(MakeDepositCommand command);
         Task TransferMoneyAsync(TransferMoneyCommand command);
-        Task CloseAccountAsync(CloseAccoundCommand command);
+        Task CloseAccountAsync(CloseAccountCommand command);
     }
 }

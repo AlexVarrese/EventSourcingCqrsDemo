@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace AccountingApi.Infrastructure
 {
@@ -14,9 +15,16 @@ namespace AccountingApi.Infrastructure
 
         public long SequenceNumber { get; set; }
 
+        public IEventStore EventStore { get; }
+
         public Aggregate()
         {
 
+        }
+
+        public Aggregate(IEventStore eventStore)
+        {
+            this.EventStore = eventStore;
         }
     }
 }

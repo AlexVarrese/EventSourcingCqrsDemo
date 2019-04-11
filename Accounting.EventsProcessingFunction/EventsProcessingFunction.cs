@@ -36,8 +36,8 @@ namespace AccountingEventsProcessingFunction
             {
                 var aggregateId = e.GetPropertyValue<string>(nameof(AggregateEvent.AggregateId));
 
-                var domainEvents = this.EventStore.GetDomainEvents(aggregateId);
-                var account = new Account(domainEvents);
+                var aggregateEvents = this.EventStore.GetAggregateEvents(aggregateId);
+                var account = new Account(this.EventStore, aggregateEvents);
 
                 await views.AddAsync(account);
             }

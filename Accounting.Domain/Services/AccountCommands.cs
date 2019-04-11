@@ -2,6 +2,7 @@
 using AccountingApi.Domain;
 using AccountingApi.Infrastructure;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AccountingApi.Services
@@ -15,50 +16,38 @@ namespace AccountingApi.Services
             this.EventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
         }
 
-        public async Task CloseAccountAsync(CloseAccoundCommand command)
+        public async Task CloseAccountAsync(CloseAccountCommand command)
         {
             var account = BuildAccountFromDomainEvents(command.AccountNumber);
-
-            await this.EventStore.AddEventsAsync(new AccountClosed(command.AccountNumber, ++account.SequenceNumber));
+            var events = account.CloseAccount(command);
+            await this.EventStore.AddEventsAsync(events);
         }
 
         public async Task CreateAccountAsync(CreateAccountCommand command)
         {
             var account = BuildAccountFromDomainEvents(command.AccountNumber);
-
-            var aggregateEvent = new AccountCreated(command.AccountNumber, command.Owner);
-            account.CreateAccount(aggregateEvent);
-                        
-            await this.EventStore.AddEventsAsync(aggregateEvent);
+            var events = account.CreateAccount(command);
+            await this.EventStore.AddEventsAsync(events);
         }
 
         public async Task MakeDepositAsync(MakeDepositCommand command)
         {
             var account =  BuildAccountFromDomainEvents(command.AccountNumber);
-
-            var aggregateEvent = new BalanceIncreased(account.AccountNumber, ++account.SequenceNumber, command.Amount);
-            account.IncreaseBalance(aggregateEvent);
-
-            await this.EventStore.AddEventsAsync(aggregateEvent);
+            var events = account.MakeDeposit(command);
+            await this.EventStore.AddEventsAsync(events);
         }
 
         public async Task TransferMoneyAsync(TransferMoneyCommand command)
         {
             var sourceAccount = BuildAccountFromDomainEvents(command.SourceAccountNumber);
-            var decreasedEvent = new BalanceDecreased(sourceAccount.AccountNumber, ++sourceAccount.SequenceNumber, command.Amount);
-            sourceAccount.DecreaseBalance(decreasedEvent);
-
-            var destinationAccount = BuildAccountFromDomainEvents(command.DestinationAccountNumber);
-            var increasedEvent = new BalanceIncreased(destinationAccount.AccountNumber, ++destinationAccount.SequenceNumber, command.Amount);
-            destinationAccount.IncreaseBalance(increasedEvent);
-
-            await this.EventStore.AddEventsAsync(decreasedEvent, increasedEvent);
+            var events = sourceAccount.TransferMoney(command);
+            await this.EventStore.AddEventsAsync(events);
         }
 
         private Account BuildAccountFromDomainEvents(string accountNumber)
         {
-            var domainEvents = this.EventStore.GetDomainEvents(Account.CreateAggregateId(accountNumber));
-            var account = new Account(domainEvents);
+            var domainEvents = this.EventStore.GetAggregateEvents(Account.CreateAggregateId(accountNumber));
+            var account = new Account(this.EventStore, domainEvents);
             return account;
         }
     }

@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Accounting.Services.Commands
 {
-    public class CloseAccoundCommand
+    public class CloseAccountCommand
     {
-        public CloseAccoundCommand(string accountNumber)
+        public CloseAccountCommand(string accountNumber)
         {
             AccountNumber = accountNumber ?? throw new ArgumentNullException(nameof(accountNumber));
         }

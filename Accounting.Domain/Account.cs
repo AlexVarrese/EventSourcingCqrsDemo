@@ -1,4 +1,5 @@
-﻿using AccountingApi.Infrastructure;
+﻿using Accounting.Services.Commands;
+using AccountingApi.Infrastructure;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ namespace AccountingApi.Domain
         public AccountState AccountState { get; set; }
         public string Owner { get; set; }
 
+
         public static string CreateAggregateId(string accountNumber)
         {
             return $"{nameof(Account)}|{accountNumber}";
@@ -21,9 +23,15 @@ namespace AccountingApi.Domain
 
         public Account()
         {
+
         }
 
-        public Account(IEnumerable<AggregateEvent> domainEvents)
+        public Account(IEventStore eventStore) : base(eventStore)
+        {
+        }
+
+        public Account(IEventStore eventStore, IEnumerable<AggregateEvent> domainEvents) 
+            : base(eventStore)
         {
             this.ApplyEvents(domainEvents);
         }
@@ -37,23 +45,23 @@ namespace AccountingApi.Domain
                 {
                     case AccountCreated accountCreatedEvent:
                         {
-                            CreateAccount(accountCreatedEvent);
+                            Handle(accountCreatedEvent);
                             break;
                         }
                     case AccountClosed accountClosedEvent:
                         {
-                            CloseAccount(accountClosedEvent);
+                            Handle(accountClosedEvent);
                             break;
                         }
                     case BalanceIncreased balanceIncreasedEvent:
                         {
-                            IncreaseBalance(balanceIncreasedEvent);
+                            Handle(balanceIncreasedEvent);
 
                             break;
                         }
                     case BalanceDecreased balanceDecreasedEvent:
                         {
-                            DecreaseBalance(balanceDecreasedEvent);
+                            Handle(balanceDecreasedEvent);
 
                             break;
                         }
@@ -63,12 +71,11 @@ namespace AccountingApi.Domain
             return account;
         }
 
-        public void CreateAccount(AccountCreated request)
+        #region Event Handlers
+
+
+        public void Handle(AccountCreated request)
         {
-            if (this.AccountState == AccountState.Created)
-            {
-                throw new InvalidOperationException($"Account {AccountNumber} already exists.");
-            }
             this.Id = CreateAggregateId(request.AccountNumber);
             this.AggregateId = CreateAggregateId(request.AccountNumber);
             this.AccountNumber = request.AccountNumber;
@@ -76,40 +83,99 @@ namespace AccountingApi.Domain
             this.AccountState = AccountState.Created;            
         }
 
-        public void CloseAccount(AccountClosed request)
+        public void Handle(AccountClosed request)
+        {
+            this.AccountState = AccountState.Closed;
+            this.SequenceNumber = request.SequenceNumber;
+        }
+
+        public void Handle(BalanceIncreased request)
+        {
+            this.CurrentBalance += request.Amount;
+            this.SequenceNumber = request.SequenceNumber;
+        }
+
+        public void Handle(BalanceDecreased request)
+        {
+            this.CurrentBalance -= request.Amount;
+            this.SequenceNumber = request.SequenceNumber;
+        }
+
+        #endregion
+
+        #region Command Handlers
+
+        public IEnumerable<AggregateEvent> CreateAccount(CreateAccountCommand command)
+        {
+            var accountEvents = this.EventStore.GetAggregateEvents(CreateAggregateId(command.AccountNumber));
+            var account = new Account(this.EventStore, accountEvents);
+            if (account.AccountState == AccountState.Created)
+            {
+                throw new InvalidOperationException($"Account {AccountNumber} already exists.");
+            }
+
+            return new AggregateEvent[]
+            {
+                new AccountCreated(command.AccountNumber, command.Owner)
+            };
+        }
+
+        public IEnumerable<AggregateEvent> CloseAccount(CloseAccountCommand command)
         {
             if (this.AccountState == AccountState.Closed)
             {
                 throw new InvalidOperationException($"Account {AccountNumber} is already closed.");
             }
 
-            this.AccountState = AccountState.Closed;
-            this.SequenceNumber = request.SequenceNumber;
-        }
-
-        public void IncreaseBalance(BalanceIncreased request)
-        {
-            if (this.AccountState == AccountState.Closed)
+            if(this.CurrentBalance > 0)
             {
-                throw new InvalidOperationException($"Account {AccountNumber} is closed.");
+                throw new InvalidOperationException($"Account {AccountNumber} still has money on it. Please withdraw before closing.");
             }
 
-            this.CurrentBalance += request.Amount;
-            this.SequenceNumber = request.SequenceNumber;
+            return new AggregateEvent[]
+            {
+                new AccountClosed(command.AccountNumber, ++SequenceNumber)
+            };
         }
 
-        public void DecreaseBalance(BalanceDecreased request)
+        public IEnumerable<AggregateEvent> MakeDeposit(MakeDepositCommand command)
         {
-            if (this.AccountState == AccountState.Closed)
+            if(this.AccountState != AccountState.Created)
             {
-                throw new InvalidOperationException($"Account {AccountNumber} is closed.");
+                throw new InvalidOperationException($"Account {AccountNumber} is not available.");
             }
-            if (this.CurrentBalance < request.Amount)
+
+            return new AggregateEvent[]
+            {
+                new BalanceIncreased(command.AccountNumber, ++SequenceNumber, command.Amount)
+            };
+        }
+
+        public IEnumerable<AggregateEvent> TransferMoney(TransferMoneyCommand command)
+        {
+            if (this.CurrentBalance < command.Amount)
             {
                 throw new InvalidOperationException($"Account {AccountNumber} does not have enough balance to execute the transaction.");
             }
-            this.CurrentBalance -= request.Amount;
-            this.SequenceNumber = request.SequenceNumber;
+            if(this.AccountState != AccountState.Created)
+            {
+                throw new InvalidOperationException($"Account {AccountNumber} is not available.");
+            }
+
+            var destinationAccountEvents = this.EventStore.GetAggregateEvents(CreateAggregateId(command.DestinationAccountNumber));
+            var destinationAccount = new Account(this.EventStore, destinationAccountEvents);
+            if(destinationAccount.AccountState != AccountState.Created)
+            {
+                throw new InvalidOperationException($"Account {destinationAccount.AccountNumber} is not available.");
+            }
+
+            return new AggregateEvent[]
+            {
+                new BalanceIncreased(command.DestinationAccountNumber, ++destinationAccount.SequenceNumber, command.Amount),
+                new BalanceDecreased(command.SourceAccountNumber, ++this.SequenceNumber, command.Amount)
+            };
         }
+
+        #endregion
     }
 }
