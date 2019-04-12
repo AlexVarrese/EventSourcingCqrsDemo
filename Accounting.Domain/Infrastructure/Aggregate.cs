@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace AccountingApi.Infrastructure
@@ -15,6 +16,7 @@ namespace AccountingApi.Infrastructure
 
         public long SequenceNumber { get; set; }
 
+        [JsonIgnore]
         public IEventStore EventStore { get; }
 
         public Aggregate()
