@@ -114,9 +114,13 @@ namespace AccountingApi.Domain
                 throw new InvalidOperationException($"Account {AccountNumber} already exists.");
             }
 
+            var aggregateEvent = new AccountCreated(command.AccountNumber, command.Owner);
+            Handle(aggregateEvent);
+
+
             return new AggregateEvent[]
             {
-                new AccountCreated(command.AccountNumber, command.Owner)
+                aggregateEvent
             };
         }
 
@@ -132,9 +136,12 @@ namespace AccountingApi.Domain
                 throw new InvalidOperationException($"Account {AccountNumber} still has money on it. Please withdraw before closing.");
             }
 
+            var aggregateEvent = new AccountClosed(command.AccountNumber, ++SequenceNumber);
+            Handle(aggregateEvent);
+
             return new AggregateEvent[]
             {
-                new AccountClosed(command.AccountNumber, ++SequenceNumber)
+                aggregateEvent
             };
         }
 
@@ -145,9 +152,12 @@ namespace AccountingApi.Domain
                 throw new InvalidOperationException($"Account {AccountNumber} is not available.");
             }
 
+            var aggregateEvent = new BalanceIncreased(command.AccountNumber, ++SequenceNumber, command.Amount);
+            Handle(aggregateEvent);
+
             return new AggregateEvent[]
             {
-                new BalanceIncreased(command.AccountNumber, ++SequenceNumber, command.Amount)
+                aggregateEvent
             };
         }
 
@@ -169,9 +179,12 @@ namespace AccountingApi.Domain
                 throw new InvalidOperationException($"Account {destinationAccount.AccountNumber} is not available.");
             }
 
+            var aggregateEvent = new BalanceIncreased(command.DestinationAccountNumber, ++destinationAccount.SequenceNumber, command.Amount);
+            Handle(aggregateEvent);
+
             return new AggregateEvent[]
             {
-                new BalanceIncreased(command.DestinationAccountNumber, ++destinationAccount.SequenceNumber, command.Amount),
+                aggregateEvent,
                 new BalanceDecreased(command.SourceAccountNumber, ++this.SequenceNumber, command.Amount)
             };
         }
